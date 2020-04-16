@@ -7,8 +7,9 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
-
 import jobshop.solvers.BasicSolver;
+import jobshop.solvers.BetterGloutonSolver;
+import jobshop.solvers.GloutonSolver;
 import jobshop.solvers.RandomSolver;
 import net.sourceforge.argparse4j.ArgumentParsers;
 import net.sourceforge.argparse4j.inf.ArgumentParser;
@@ -18,16 +19,30 @@ import net.sourceforge.argparse4j.inf.Namespace;
 
 public class Main {
 
+	public enum arg {
+    	SPT,
+    	LPT,
+    	SRPT,
+    	LRPT	
+    }
     /** All solvers available in this program */
     private static HashMap<String, Solver> solvers;
+  
     static {
         solvers = new HashMap<>();
         solvers.put("basic", new BasicSolver());
         solvers.put("random", new RandomSolver());
+        solvers.put("spt", new GloutonSolver(arg.SPT));
+        solvers.put("lpt", new GloutonSolver(arg.LPT));
+        solvers.put("srpt", new GloutonSolver(arg.SRPT));
+        solvers.put("lrpt", new GloutonSolver(arg.LRPT));
+        solvers.put("betterspt", new BetterGloutonSolver(arg.SPT));
+        solvers.put("betterlpt", new BetterGloutonSolver(arg.LPT));
         // add new solvers here
     }
 
-
+    
+    
     public static void main(String[] args) {
         ArgumentParser parser = ArgumentParsers.newFor("jsp-solver").build()
                 .defaultHelp(true)

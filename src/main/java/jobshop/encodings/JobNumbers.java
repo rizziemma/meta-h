@@ -4,7 +4,9 @@ import jobshop.Encoding;
 import jobshop.Instance;
 import jobshop.Schedule;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 
 /** Représentation par numéro de job. */
 public class JobNumbers extends Encoding {
@@ -49,9 +51,30 @@ public class JobNumbers extends Encoding {
 
         return new Schedule(instance, startTimes);
     }
+    
+    
+    public void fromSchedule(Schedule s) {
+    	ArrayList<TaskDate> tasks = new ArrayList<TaskDate>();
+    	for(int job = 0 ; job < instance.numJobs; job++) {
+    		for(int task = 0 ; task < instance.numTasks; task++) {
+    			tasks.add(new TaskDate(s.startTime(job, task), new Task(job, task), instance.machine(job,task))); //insert chaque task avec sa date de debut
+    		}
+    	}
+    	Collections.sort(tasks); //trie toutes les tasks selon leur date de debut
+    	
+    	tasks.forEach((task) -> jobs[nextToSet++]=task.task.job); //insert le num du job dans la liste des jobs -> ordre ok car tri par date de debut
+    }
 
     @Override
     public String toString() {
         return Arrays.toString(Arrays.copyOfRange(jobs,0, nextToSet));
     }
+    
+    @Override
+  	public boolean equals(Object o) {
+  		if (this == o) return true;
+          if (o == null || getClass() != o.getClass()) return false;
+          JobNumbers r = (JobNumbers) o;
+          return Arrays.equals(jobs,r.jobs);
+  	}
 }

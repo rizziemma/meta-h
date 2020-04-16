@@ -51,7 +51,7 @@ public class Schedule {
 
         return true;
     }
-
+    
     public int makespan() {
         int max = -1;
         for(int j = 0 ; j<pb.numJobs ; j++) {
@@ -63,4 +63,30 @@ public class Schedule {
     public Schedule copy() {
         return new Schedule(this.pb, this.times);
     }
+    
+    @Override
+    public String toString() {
+    	String s = "";
+    	for(int i= 0 ; i<pb.numJobs ; i++) {
+    		s += ("Job " + i + " : ");
+    		for(int j= 0 ; j<pb.numTasks ; j++) {
+        		s+= (j + " " + times[i][j]+" ; ");
+        	}
+    		s+="\n";
+    	}
+    	
+		return s;
+    	
+    
+    }
+    
+
+    @Override
+   	public boolean equals(Object o) {
+   		if (this == o) return true;
+           if (o == null || getClass() != o.getClass()) return false;
+           Schedule s = (Schedule) o;
+           return Arrays.deepEquals(times,s.times);
+   	}
+    
 }
