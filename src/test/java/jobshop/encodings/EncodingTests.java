@@ -49,7 +49,7 @@ public class EncodingTests {
         assert sched.makespan() == 14;
     }
 
-
+/*
     @Test
     public void testResourceOrder() throws IOException {
     	System.out.print("testResourceOrder \n");
@@ -80,7 +80,8 @@ public class EncodingTests {
         assert sched.isValid();
         assert sched.makespan() == 16;
     }
-
+*/
+    /*
     @Test
     public void testFromScheduleResourceOrder() throws IOException {
     	System.out.print("testFromScheduleResourceOrder \n");
@@ -99,7 +100,7 @@ public class EncodingTests {
         System.out.println(enc2.toSchedule());
         assert enc1.equals(enc2);   
 
-    }
+    }*/
     
     @Test
     public void testFromScheduleJobNumbers() throws IOException {

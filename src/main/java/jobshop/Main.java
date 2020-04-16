@@ -23,11 +23,11 @@ public class Main {
     	SPT,
     	LPT,
     	SRPT,
-    	LRPT	
+    	LRPT,
+    	EST_SPT
     }
     /** All solvers available in this program */
     private static HashMap<String, Solver> solvers;
-  
     static {
         solvers = new HashMap<>();
         solvers.put("basic", new BasicSolver());

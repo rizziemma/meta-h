@@ -38,7 +38,7 @@ public class BetterGloutonSolver implements Solver {
 		do {
 			tasks = next(instance, set);			
 			tasks.forEach((t)-> {int m = instance.machine(t.job, t.task);  
-								sol.resources[m][sol.nextToSet[m]++]=t;
+								sol.tasksByMachine[m][sol.nextFreeSlot[m]++]=t;
 								set[t.job][t.task] = 1;
 								});				
 			
