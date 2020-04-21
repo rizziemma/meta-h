@@ -11,6 +11,7 @@ import jobshop.solvers.BasicSolver;
 import jobshop.solvers.DescentSolver;
 import jobshop.solvers.GloutonSolver;
 import jobshop.solvers.RandomSolver;
+import jobshop.solvers.TabooSolver;
 import net.sourceforge.argparse4j.ArgumentParsers;
 import net.sourceforge.argparse4j.inf.ArgumentParser;
 import net.sourceforge.argparse4j.inf.ArgumentParserException;
@@ -40,7 +41,7 @@ public class Main {
         solvers.put("est-spt", new GloutonSolver(arg.EST_SPT));
         solvers.put("est-lrpt", new GloutonSolver(arg.EST_LRPT));
         solvers.put("descent", new DescentSolver());
-
+        solvers.put("taboo", new TabooSolver());
         //solvers.put("betterspt", new BetterGloutonSolver(arg.SPT));
         //solvers.put("betterlpt", new BetterGloutonSolver(arg.LPT));
         // add new solvers here

@@ -12,28 +12,30 @@ import jobshop.Solver;
 import jobshop.Main.arg;
 import jobshop.encodings.ResourceOrder;
 import jobshop.encodings.Task;
-import jobshop.solvers.TabooSolver.Swap;
 
-public class DescentSolver implements Solver {
+public class TabooSolver implements Solver {
 
-	//def pour utiliser dans les for each
-	Schedule sol;
-	boolean update;
-    
 	
-	/** A block represents a subsequence of the critical path such that all tasks in it execute on the same machine.
-     * This class identifies a block in a ResourceOrder representation.
-     *
-     * Consider the solution in ResourceOrder representation
-     * machine 0 : (0,1) (1,2) (2,2)
-     * machine 1 : (0,2) (2,1) (1,1)
-     * machine 2 : ...
-     *
-     * The block with : machine = 1, firstTask= 0 and lastTask = 1
-     * Represent the task sequence : [(0,2) (2,1)]
-     *
-     * */
-    static class Block {
+	int maxIter;
+	int dureeTaboo;
+	int [][][] sTaboo;
+
+	
+	//def pour utiliser dans les for each
+	int min;
+	Swap swap;
+	Schedule sol;
+	int k;
+	
+    public int getMaxIter() {
+		return maxIter;
+	}
+
+	public void setMaxIter(int maxIter) {
+		this.maxIter = maxIter;
+	}
+
+	static class Block {
         /** machine on which the block is identified */
         final int machine;
         /** index of the first task of the block */
@@ -48,21 +50,6 @@ public class DescentSolver implements Solver {
         }
     }
 
-    /**
-     * Represents a swap of two tasks on the same machine in a ResourceOrder encoding.
-     *
-     * Consider the solution in ResourceOrder representation
-     * machine 0 : (0,1) (1,2) (2,2)
-     * machine 1 : (0,2) (2,1) (1,1)
-     * machine 2 : ...
-     *
-     * The swam with : machine = 1, t1= 0 and t2 = 1
-     * Represent inversion of the two tasks : (0,2) and (2,1)
-     * Applying this swap on the above resource order should result in the following one :
-     * machine 0 : (0,1) (1,2) (2,2)
-     * machine 1 : (2,1) (0,2) (1,1)
-     * machine 2 : ...
-     */
     static class Swap {
         // machine on which to perform the swap
         final int machine;
@@ -88,36 +75,54 @@ public class DescentSolver implements Solver {
 
     @Override
     public Result solve(Instance instance, long deadline) {
-    	sol = new GloutonSolver(arg.SPT).solve(instance, deadline).schedule;
+    	this.maxIter = 10000;
+    	this.dureeTaboo = 20;
+    	this.sTaboo = new int[instance.numMachines][instance.numJobs][instance.numJobs]; //init a 0 par defaut
     	
-    	update = true;
-    	while(update) {
+    	sol = new GloutonSolver(arg.SPT).solve(instance, deadline).schedule;
+    	Schedule best = sol;
+    	k = 0;
+    	while(k<= this.maxIter) {
     		if(System.currentTimeMillis() > deadline) {
     			return new Result(instance, sol, Result.ExitCause.Timeout);
     		}else {
-    			update = false;
     			
     			//liste toutes les solutions voisines
     			ResourceOrder r_sol = new ResourceOrder(sol);
     			ResourceOrder r = r_sol.copy();
+    			min = Integer.MAX_VALUE;
     			blocksOfCriticalPath(r_sol).forEach((b) -> { 
     					neighbors(b).forEach((s)-> {
-    						s.applyOn(r);
-    						Schedule s_current = r.toSchedule(); //verifie si on a une solution valide après swap
-    						if(s_current != null && s_current.makespan() < sol.makespan()) {
-    							  sol = s_current; //meilleure solution
-    							  update = true;
+    						if(sTaboo[s.machine][s.t1][s.t2]<= k) {
+    							s.applyOn(r);
+    							Schedule s_current = r.toSchedule(); //verifie si on a une solution valide après swap
+    							if(s_current != null ) {
+    								int makespan = s_current.makespan();
+    								if(makespan < min) {
+    									sol = s_current;
+    									swap = s;
+    									min = makespan;
+    								}
+    							}
+    						s.applyOn(r); //reapplique le swap pour revenir a la solution initiale
     						}
-    						s.applyOn(r);  //reapplique le swap pour revenir a la solution initiale
-    						
     					});
     			});
-    					
+    			
+    			//ajoute sol a sTaboo
+    			sTaboo[swap.machine][swap.t2][swap.t1] = this.dureeTaboo + k;
+    			
+    			//update meilleure solution
+    			if(min < best.makespan()) {
+    				best = sol;
+    			}
+    			
+    			k++;
     		}
     	}
         
     	
-    	return new Result(instance, sol, Result.ExitCause.Blocked);
+    	return new Result(instance, best, Result.ExitCause.Blocked);
     }
 
     /** Returns a list of all blocks of the critical path. */
