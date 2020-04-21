@@ -8,7 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import jobshop.solvers.BasicSolver;
-import jobshop.solvers.BetterGloutonSolver;
+import jobshop.solvers.DescentSolver;
 import jobshop.solvers.GloutonSolver;
 import jobshop.solvers.RandomSolver;
 import net.sourceforge.argparse4j.ArgumentParsers;
@@ -24,7 +24,8 @@ public class Main {
     	LPT,
     	SRPT,
     	LRPT,
-    	EST_SPT
+    	EST_SPT,
+    	EST_LRPT
     }
     /** All solvers available in this program */
     private static HashMap<String, Solver> solvers;
@@ -36,8 +37,12 @@ public class Main {
         solvers.put("lpt", new GloutonSolver(arg.LPT));
         solvers.put("srpt", new GloutonSolver(arg.SRPT));
         solvers.put("lrpt", new GloutonSolver(arg.LRPT));
-        solvers.put("betterspt", new BetterGloutonSolver(arg.SPT));
-        solvers.put("betterlpt", new BetterGloutonSolver(arg.LPT));
+        solvers.put("est-spt", new GloutonSolver(arg.EST_SPT));
+        solvers.put("est-lrpt", new GloutonSolver(arg.EST_LRPT));
+        solvers.put("descent", new DescentSolver());
+
+        //solvers.put("betterspt", new BetterGloutonSolver(arg.SPT));
+        //solvers.put("betterlpt", new BetterGloutonSolver(arg.LPT));
         // add new solvers here
     }
 

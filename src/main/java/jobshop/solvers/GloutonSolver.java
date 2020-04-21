@@ -27,25 +27,25 @@ public class GloutonSolver implements Solver {
     	int[][] set = new int[instance.numJobs][instance.numTasks];
     	for (int[] row: set)
             Arrays.fill(row, 0);
- 
-		Task t = next(instance, set);
-		ResourceOrder sol = new ResourceOrder(instance);
+
+    	ResourceOrder sol = new ResourceOrder(instance);
+		Task t = next(instance, set, sol);
 		
 		
 		while(t != null){
 					
 			int m = instance.machine(t.job, t.task);  
-			sol.resources[m][sol.nextToSet[m]++]=t;
+			sol.tasksByMachine[m][sol.nextFreeSlot[m]++]=t;
 			set[t.job][t.task] = 1;
 			
-			t = next(instance, set);							
+			t = next(instance, set, sol);							
 			
 		} 
 		        
         return new Result(instance, sol.toSchedule(), Result.ExitCause.Blocked);
     }
     
-    private Task next(Instance instance, int[][] set){ 
+    private Task next(Instance instance, int[][] set, ResourceOrder sol){ 
     	Task output = null;
     	//liste des prochaines taches possibles non triee
     	ArrayList<Task> possible = new ArrayList<Task>();
@@ -65,51 +65,130 @@ public class GloutonSolver implements Solver {
     	//tri selon la methode en arg
     	switch(this.arg) {
     	case SPT : // plus petite duration
-    		output = Collections.min(possible, (a,b)->Integer.compare(instance.duration(a.job, a.task), instance.duration(b.job, b.task)));
+    		output = Collections.min(possible, new SPT_comparator(instance));
     		break;
     		
     		
     	case LPT : //plus longue duration
-    		output = Collections.max(possible, (a,b)->Integer.compare(instance.duration(a.job, a.task), instance.duration(b.job, b.task)));
+    		output = Collections.max(possible, new LPT_comparator(instance));
     		break;
     		
     		
     	case SRPT : //plus petit temps restant
-    		output = Collections.min(possible, new Comparator<Task>() {
-    			public int compare(Task a, Task b) {
-    				int remain_a = 0;
-        			for(int i = a.task ; i<= instance.numTasks; i++) {
-        				remain_a += instance.duration(a.job, a.task);
-        			}
-        			
-        			int remain_b = 0;
-        			for(int i = b.task ; i<= instance.numTasks; i++) {
-        				remain_b += instance.duration(b.job, b.task);
-        			}
-        			
-        			return Integer.compare(remain_a, remain_b);
-    		}});
+    		output = Collections.min(possible, new SRPT_comparator(instance));
     		break;
     		
     		
     	case LRPT ://plus grand temps restant
-    		output = Collections.max(possible, new Comparator<Task>() {
-    			public int compare(Task a, Task b) {
-    				int remain_a = 0;
-        			for(int i = a.task ; i<= instance.numTasks; i++) {
-        				remain_a += instance.duration(a.job, a.task);
-        			}
-        			
-        			int remain_b = 0;
-        			for(int i = b.task ; i<= instance.numTasks; i++) {
-        				remain_b += instance.duration(b.job, b.task);
-        			}
-        			
-        			return Integer.compare(remain_a, remain_b);
-    		}});
+    		output = Collections.max(possible, new LRPT_comparator(instance));
     		break;
-    	}
+    		
+    	case EST_SPT : // date de début le plus tôt + plus petite duration
+    		output = Collections.min(possible, new EST_comparator(instance, sol).thenComparing(new SPT_comparator(instance)));
+    		break;
+    	
+    	case EST_LRPT : // date de début le plus tôt + plus grand temps restant
+    		output = Collections.min(possible, new EST_comparator(instance, sol).thenComparing(new LRPT_comparator(instance)));
+    		break;
+		}
+    	
     	return output;
     
 	}
+    
+    
+    public class SPT_comparator implements Comparator<Task> {
+    	Instance instance;
+    	public SPT_comparator(Instance instance) {
+    		super();
+    		this.instance = instance;
+    	}
+    	public int compare(Task a, Task b) {
+			return Integer.compare(instance.duration(a.job, a.task), instance.duration(b.job, b.task));
+		}
+    }
+    
+    public class LPT_comparator implements Comparator<Task> {
+    	Instance instance;
+    	public LPT_comparator(Instance instance) {
+    		super();
+    		this.instance = instance;
+    	}
+    	public int compare(Task a, Task b) {
+			return Integer.compare(instance.duration(a.job, a.task), instance.duration(b.job, b.task));
+		}
+    }
+    
+
+	public class SRPT_comparator implements Comparator<Task> {
+    	Instance instance;
+    	public SRPT_comparator(Instance instance) {
+    		super();
+    		this.instance = instance;
+    	}
+    	
+    	public int compare(Task a, Task b) {
+			int remain_a = 0;
+			for(int i = a.task ; i<= instance.numTasks; i++) {
+				remain_a += instance.duration(a.job, a.task);
+			}
+			
+			int remain_b = 0;
+			for(int i = b.task ; i<= instance.numTasks; i++) {
+				remain_b += instance.duration(b.job, b.task);
+			}
+			
+			return Integer.compare(remain_a, remain_b);
+    	}
+    }
+	
+	public class LRPT_comparator implements Comparator<Task> {
+    	Instance instance;
+    	public LRPT_comparator(Instance instance) {
+    		super();
+    		this.instance = instance;
+    	}
+    	
+    	public int compare(Task a, Task b) {
+			int remain_a = 0;
+			for(int i = a.task ; i<= instance.numTasks; i++) {
+				remain_a += instance.duration(a.job, a.task);
+			}
+			
+			int remain_b = 0;
+			for(int i = b.task ; i<= instance.numTasks; i++) {
+				remain_b += instance.duration(b.job, b.task);
+			}
+			
+			return Integer.compare(remain_a, remain_b);
+    	}
+    }
+	
+	public class EST_comparator implements Comparator<Task> {
+    	Instance instance;
+    	ResourceOrder sol;
+    	public EST_comparator(Instance instance,ResourceOrder sol ) {
+    		super();
+    		this.instance = instance;
+    		this.sol = sol;
+    	}
+    	
+    	public int compare(Task a, Task b) {
+			int start_a = 0;
+			int i = 0;
+			while(sol.tasksByMachine[instance.machine(a)][i] != null) {
+				start_a+=instance.duration(sol.tasksByMachine[instance.machine(a)][i]);
+				i++;
+			}
+			
+			int start_b = 0 ;
+			i = 0;
+			while(sol.tasksByMachine[instance.machine(b)][i] != null) {
+				start_b+=instance.duration(sol.tasksByMachine[instance.machine(b)][i]);
+				i++;
+			}
+			return Integer.compare(start_a, start_b);
+    	}
+    }
+	
 }

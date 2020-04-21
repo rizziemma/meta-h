@@ -44,7 +44,7 @@ public class BetterGloutonSolver implements Solver {
 			
 		}while(!tasks.isEmpty()); 
 		        
-        return new Result(instance, sol.toSchedule(), Result.ExitCause.Blocked);
+        return new Result(instance, sol.toSchedule(), Result.ExitCause.ProvedOptimal);
     }
     
     private ArrayList<Task> next(Instance instance, int[][] set){ 

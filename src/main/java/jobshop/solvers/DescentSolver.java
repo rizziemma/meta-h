@@ -1,11 +1,17 @@
 package jobshop.solvers;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
 import jobshop.Instance;
 import jobshop.Result;
+import jobshop.Schedule;
 import jobshop.Solver;
+import jobshop.Main.arg;
 import jobshop.encodings.ResourceOrder;
-
-import java.util.List;
+import jobshop.encodings.Task;
 
 public class DescentSolver implements Solver {
 
@@ -67,24 +73,84 @@ public class DescentSolver implements Solver {
 
         /** Apply this swap on the given resource order, transforming it into a new solution. */
         public void applyOn(ResourceOrder order) {
-            throw new UnsupportedOperationException();
+            Task t = order.tasksByMachine[this.machine][t1];
+            order.tasksByMachine[this.machine][t1] = order.tasksByMachine[this.machine][t2];
+            order.tasksByMachine[this.machine][t2] = t;
         }
     }
 
 
     @Override
     public Result solve(Instance instance, long deadline) {
-        throw new UnsupportedOperationException();
+    	long start = System.currentTimeMillis();
+    	Schedule sol = new GloutonSolver(arg.SPT).solve(instance, deadline).schedule;
+    	boolean update = true;
+    	while(update) {
+    		if(System.currentTimeMillis()-start > deadline) {
+    			return new Result(instance, sol, Result.ExitCause.Timeout);
+    		}else {
+    			update = false;
+    			
+    			//liste toutes les solutions voisines
+    			List<Schedule> neighbors = new ArrayList<Schedule>(); 
+    			ResourceOrder r_sol = new ResourceOrder(sol);
+    			blocksOfCriticalPath(r_sol).forEach((b) -> { 
+    					neighbors(b).forEach((s)-> {
+    						ResourceOrder r = r_sol.copy();
+    						s.applyOn(r);
+    						neighbors.add(r.toSchedule());
+    					});
+    			});
+    					
+    			//cherche la meilleure solution du voisinage
+    			Schedule s = Collections.min(neighbors, (a,b) -> Integer.compare(a.makespan(), b.makespan()));
+    			
+    			if(sol.makespan() > s.makespan()) {
+    				sol = s;
+    				update = true;
+    			}    			
+    		}
+    	}
+        
+    	
+    	return new Result(instance, sol, Result.ExitCause.Blocked);
     }
 
     /** Returns a list of all blocks of the critical path. */
     List<Block> blocksOfCriticalPath(ResourceOrder order) {
-        throw new UnsupportedOperationException();
+        List<Task> critical_path = order.toSchedule().criticalPath();
+        List<Block> blocks = new ArrayList<Block>();
+        
+        int t1 = 0;
+        int t2 = 1;
+        while(t2<critical_path.size()-1) {
+        	int m = order.instance.machine(critical_path.get(t1));
+        	while(order.instance.machine(critical_path.get(t2)) == m) {
+        		t2++;
+        	}
+        	if(t2-1 > t1) { //au moins 2 taches d'affilée sur la même machine
+        		List<Task> l = Arrays.asList(order.tasksByMachine[m]);
+        		blocks.add(new Block(m, l.indexOf(critical_path.get(t1)) ,l.indexOf(critical_path.get(t2)) ));
+        	}
+        	t1 = t2; //replace la première tache a comparer
+        	t2++;
+        }
+        
+        
+        return blocks;
     }
 
     /** For a given block, return the possible swaps for the Nowicki and Smutnicki neighborhood */
     List<Swap> neighbors(Block block) {
-        throw new UnsupportedOperationException();
+        List<Swap> swaps = new ArrayList<Swap>();
+        if(block.lastTask == block.firstTask+1) { //block de taille 2 => un seul swap
+        	swaps.add(new Swap(block.machine, block.firstTask, block.lastTask));
+        }else { //block de taille > 2 => 2 swaps
+        	swaps.add(new Swap(block.machine, block.firstTask, block.firstTask +1));
+        	swaps.add(new Swap(block.machine, block.lastTask-1, block.lastTask));
+        }
+        
+        return swaps;
     }
 
 }
