@@ -26,6 +26,11 @@ public class JobNumbers extends Encoding {
         jobs = new int[instance.numJobs * instance.numMachines];
         Arrays.fill(jobs, -1);
     }
+    
+    public JobNumbers(Instance instance, int[] elements) {
+    	super(instance);
+    	this.jobs = elements.clone();
+    }
 
     public JobNumbers(Schedule schedule) {
         super(schedule.pb);

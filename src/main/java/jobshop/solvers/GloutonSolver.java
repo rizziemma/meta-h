@@ -65,26 +65,26 @@ public class GloutonSolver implements Solver {
     	//tri selon la methode en arg
     	switch(this.arg) {
     	case SPT : // plus petite duration
-    		output = Collections.min(possible, new SPT_comparator(instance));
+    		output = Collections.min(possible, new PT_comparator(instance));
     		break;
     		
     		
     	case LPT : //plus longue duration
-    		output = Collections.max(possible, new LPT_comparator(instance));
+    		output = Collections.max(possible, new PT_comparator(instance));
     		break;
     		
     		
     	case SRPT : //plus petit temps restant
-    		output = Collections.min(possible, new SRPT_comparator(instance));
+    		output = Collections.min(possible, new RPT_comparator(instance));
     		break;
     		
     		
     	case LRPT ://plus grand temps restant
-    		output = Collections.max(possible, new LRPT_comparator(instance));
+    		output = Collections.max(possible, new RPT_comparator(instance));
     		break;
     		
     	case EST_SPT : // date de début le plus tôt + plus petite duration
-    		output = Collections.min(possible, new EST_comparator(instance, sol).thenComparing(new SPT_comparator(instance)));
+    		output = Collections.min(possible, new EST_comparator(instance, sol).thenComparing(new PT_comparator(instance)));
     		break;
     	
     	case EST_LRPT : // date de début le plus tôt + plus grand temps restant
@@ -97,9 +97,9 @@ public class GloutonSolver implements Solver {
 	}
     
     
-    public class SPT_comparator implements Comparator<Task> {
+    public class PT_comparator implements Comparator<Task> {
     	Instance instance;
-    	public SPT_comparator(Instance instance) {
+    	public PT_comparator(Instance instance) {
     		super();
     		this.instance = instance;
     	}
@@ -108,21 +108,11 @@ public class GloutonSolver implements Solver {
 		}
     }
     
-    public class LPT_comparator implements Comparator<Task> {
-    	Instance instance;
-    	public LPT_comparator(Instance instance) {
-    		super();
-    		this.instance = instance;
-    	}
-    	public int compare(Task a, Task b) {
-			return Integer.compare(instance.duration(a.job, a.task), instance.duration(b.job, b.task));
-		}
-    }
     
 
-	public class SRPT_comparator implements Comparator<Task> {
+	public class RPT_comparator implements Comparator<Task> {
     	Instance instance;
-    	public SRPT_comparator(Instance instance) {
+    	public RPT_comparator(Instance instance) {
     		super();
     		this.instance = instance;
     	}
@@ -160,7 +150,7 @@ public class GloutonSolver implements Solver {
 				remain_b += instance.duration(b.job, b.task);
 			}
 			
-			return Integer.compare(remain_a, remain_b);
+			return Integer.compare(remain_b, remain_a);
     	}
     }
 	

@@ -2,17 +2,15 @@ package jobshop.solvers;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 import jobshop.Instance;
+import jobshop.Main.arg;
 import jobshop.Result;
 import jobshop.Schedule;
 import jobshop.Solver;
-import jobshop.Main.arg;
 import jobshop.encodings.ResourceOrder;
 import jobshop.encodings.Task;
-import jobshop.solvers.TabooSolver.Swap;
 
 public class DescentSolver implements Solver {
 
@@ -88,11 +86,11 @@ public class DescentSolver implements Solver {
 
     @Override
     public Result solve(Instance instance, long deadline) {
-    	sol = new GloutonSolver(arg.SPT).solve(instance, deadline).schedule;
+    	sol = new GloutonSolver(arg.EST_SPT).solve(instance, deadline).schedule;
     	
     	update = true;
     	while(update) {
-    		if(System.currentTimeMillis() > deadline) {
+    		if(deadline - System.currentTimeMillis() <= 1) {
     			return new Result(instance, sol, Result.ExitCause.Timeout);
     		}else {
     			update = false;
