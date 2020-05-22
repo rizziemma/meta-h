@@ -22,7 +22,7 @@ public class TabooSolver extends DescentSolver {
 
     @Override
     public Result solve(Instance instance, long deadline) {
-    	this.maxIter = 100;
+    	this.maxIter = 500;
     	this.dureeTaboo = 20;
     	this.sTaboo = new int[instance.numMachines][instance.numJobs][instance.numJobs]; //init a 0 par defaut
     	
